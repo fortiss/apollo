@@ -18,6 +18,8 @@ import queue
 # from std_msgs.msg import Header
 import header_pb2 as header
 
+import math
+
 from smartmicro.HardwareLayer.comFactory.comDeviceFactory import ComDeviceFactory
 from smartmicro.Services.basicCanServices.targetService import CanIDServiceTargetList
 from smartmicro.Services.communication import comDeviceTypes, Communication
@@ -29,6 +31,7 @@ from smartmicro.Services.basicCanServices.uatResponseService import uatResponseS
 # CRT
 #from cyber_py import cyber
 from cyber_py3 import cyber
+from cyber_py3 import cyber_time
 
 import logging
 
@@ -144,7 +147,7 @@ class crt_umrr_publisher:
         #json_format.Parse(data, self.can_conf, ignore_unknown_fields=False)  
 
         
-        self.pub = self.ummrr_node.create_writer("target_list", pc_2.PointCloud, qos_depth=2)        
+        self.pub = self.ummrr_node.create_writer("/apollo/radar/umrr_driver/FL", pc_2.PointCloud, qos_depth=2)        
         self.frame_id = self.radar_conf.frame_id
 
         # CRT
@@ -168,7 +171,7 @@ class crt_umrr_publisher:
             if error_msg.errno == 2:                
                 # evaluates to os error "file not found"                
                 # CRT
-                logging.error("Specified can spec not found!")
+                logging.error("Specified can spec not found!" + self.can_conf.can_spec)
             elif error_msg.errno == 19:               
                 # evaluates to os error "no such device"                
                 # CRT
@@ -184,7 +187,7 @@ class crt_umrr_publisher:
         self.seq = 0
         
         # CRT
-        start = cyber.Time.now()
+        start = cyber_time.Time.now()
 
         #CRT
         if not self.radar_conf.debug:
@@ -219,7 +222,7 @@ class crt_umrr_publisher:
             self.seq += 1
 
             # CRT
-            duration = cyber.Time.now() - start
+            duration = cyber_time.Time.now() - start
             logging.debug("Duration: %s ms", duration.to_sec() * 1000)
 
     def __create_serv(self):
@@ -399,41 +402,41 @@ class crt_umrr_publisher:
         resp = resp['value']
         return str(resp)
 
-    @staticmethod
-    def __create_pcl_msg(list_of_targets, seq):
+    def __create_pcl_msg(self, list_of_targets, seq):
         """
         Function fills the template with data coming from the sensor
-        """
-
-        header = Header()
-        
-        header.timestampt_sec = cyber.Time.now()
-        header.radar_timestamp = cyber.Time.now()
-        header.module_name = "Cartesian UMMR CAN Publisher"
-        header.sequence_num = seq
-        
-        header.frame_id = self.radar_conf.frame_id        
+        """       
 
         cloud_msg = pc_2.PointCloud()
-        cloud_msg.header = header
+
+        cloud_msg.header.timestamp_sec = cyber_time.Time.now().to_sec()
+        cloud_msg.header.radar_timestamp = int(cyber_time.Time.now().to_sec())
+        cloud_msg.header.module_name = "Cartesian UMMR CAN Publisher"
+        cloud_msg.header.sequence_num = seq
+        cloud_msg.header.frame_id = self.radar_conf.frame_id
+
         cloud_msg.frame_id = self.radar_conf.frame_id
 
         for target in list_of_targets:
-            try:                                
-                dist = target["Range"]
-                azimuth_phi = target["Azimuth"] / 180.0 * pi
-                elevation_theta = point["Elevation"] / 180.0 * pi
-                x = dist * cos(elevation_theta) * cos(azimuth_phi)
-                y = dist * cos(elevation_theta) * sin(azimuth_phi)
-                z = dist * sin(elevation_theta)
+            try:                       
 
-                point = pc_2.PointXYZIT()
+                #point = pc_2.PointXYZIT
+                point = cloud_msg.point.add() 
+
+                dist = target["Range"]
+                azimuth_phi = target["Azimuth"] / 180.0 * math.pi
+                elevation_theta = target["Elevation"] / 180.0 * math.pi
+                x = dist * math.cos(elevation_theta) * math.cos(azimuth_phi)
+                y = dist * math.cos(elevation_theta) * math.sin(azimuth_phi)
+                z = dist * math.sin(elevation_theta)
+
                 point.x = x
                 point.y = y
                 point.z = z
-                point.timestampt = cyber.Time.now()
+                point.timestamp = int(cyber_time.Time.now().to_nsec())
 
-                cloud_msg.point.append(point)
+
+                #cloud_msg.point.append(point)
             except KeyError:
                 # CRT
                 logging.warning("Incomplete position data received. Skipping result.")
