@@ -114,13 +114,21 @@ class crt_umrr_publisher:
             print "Usage:", sys.argv[0], "Config file for Radar"
             sys.exit(-1)
 
+        self.setup_conf = SetupConf()
         self.radar_conf = RadarConf()
         self.can_conf = CanConf()
+
         with open(sys.argv[1], 'r') as myfile:
             data=myfile.read()
 
-        json_format.Parse(data, self.radar_conf, ignore_unknown_fields=False)  
-        json_format.Parse(data, self.can_conf, ignore_unknown_fields=False)  
+        json_format.Parse(data, self.setup_conf, ignore_unknown_fields=False)
+
+        self.radar_conf = self.setup_conf.radar_conf
+        self.can_conf = self.setup_conf.can_conf
+        self.write_channel = self.setup_conf.write_channel
+
+        # json_format.Parse(data, self.radar_conf, ignore_unknown_fields=False)  
+        # json_format.Parse(data, self.can_conf, ignore_unknown_fields=False)  
 
         
         self.pub = self.ummrr_node.create_writer("target_list", RadarConf, queue_size=2)        

@@ -3,7 +3,7 @@
     "can_card_parameter": {
       "brand": "SOCKET_CAN_RAW",
       "type": "USB_CARD",
-      "channel_id": "CHANNEL_ID_ZERO"
+      "channel_id": "CHANNEL_ID_THREE"
     },
     "enable_debug_mode": false,
     "enable_receiver_log": false,
@@ -12,7 +12,7 @@
   
   "radar_conf": {
     "frame_id": "radar_FL",
-    "can_socket": "can0",
+    "can_socket": "can3",
     "debug": 0,
     "antenna_mode": {
       "section": 3016,
@@ -21,5 +21,5 @@
     }
   },
 
-  "write_channel": "/apollo/sensor/radar/targets/fortiss/FL"
+  "write_channel": "/apollo/sensor/radar/targets/PointCloud2"
 }

@@ -7,7 +7,7 @@ module_config {
       name: "UmrrProductionRadarDetectionFL"
       config_file_path: "/apollo/modules/perception/production/conf/perception/umrr_radar/umrr_radar_component_conf_fl.pb.txt"
       readers {
-          channel: "/apollo/sensor/radar/fortiss/FL"
+          channel: "/apollo/sensor/radar/objects/fortiss/FL"
         }
     }
   }

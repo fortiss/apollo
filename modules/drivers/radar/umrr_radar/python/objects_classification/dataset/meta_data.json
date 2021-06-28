@@ -1,0 +1,17 @@
+{
+    "all_mirroring": true,
+    "attribute": "all data with FOV filtering 32 cropping",
+    "augmentation": true,
+    "crop_window_size": 5,
+    "filter_lowlevel": true,
+    "mirroring": true,
+    "nms": true,
+    "polar_coord": true,
+    "shuffle": true,
+    "test_only_nearby": false,
+    "use_manual_annotation": true,
+    "view_cluster": true,
+    "viz_input": false,
+    "x_lim": 1000,
+    "yaw_threshold": 100
+}

@@ -117,12 +117,23 @@ void UmrrArsDetector::RawObs2Frame(
 
     
     // EW defined kind of object based on the smartmicro specification which makes it dependent upon object length
-    if(radar_obs.length() >= 1.0 && radar_obs.length() <= 1.2 || radar_obs.length() >= 4.4) {
+    // EW I comment it for now, as I am going to already provide information about object type in UmrrObject
+    /* if(radar_obs.length() >= 1.0 && radar_obs.length() <= 1.2 || radar_obs.length() >= 4.4) {
       radar_object->type = base::ObjectType::VEHICLE;
     } else if (radar_obs.length() >= 2.0 && radar_obs.length() <= 3.2) {
       radar_object->type = base::ObjectType::BICYCLE;
     } else {
       radar_object->type = base::ObjectType::UNKNOWN;
+    } */
+
+    if(radar_obs.obstacle_type() == 0) {
+      radar_object->type = base::ObjectType::UNKNOWN;
+    } else if (radar_obs.obstacle_type() == 1) {
+      radar_object->type = base::ObjectType::PEDESTRIAN;
+    } else if (radar_obs.obstacle_type() == 2) {
+      radar_object->type = base::ObjectType::BICYCLE;
+    } else if (radar_obs.obstacle_type() == 3) {
+      radar_object->type = base::ObjectType::VEHICLE;
     }
     
     radar_object->size(0) = static_cast<float>(radar_obs.length());

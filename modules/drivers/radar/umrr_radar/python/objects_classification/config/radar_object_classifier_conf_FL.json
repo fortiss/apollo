@@ -1,0 +1,4 @@
+{
+  "read_channel": "/apollo/sensor/radar/targets/fortiss/FL",
+  "write_channel": "/apollo/sensor/radar/objects/fortiss/FL"
+}

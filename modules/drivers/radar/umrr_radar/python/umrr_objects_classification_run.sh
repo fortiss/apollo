@@ -1,0 +1,2 @@
+#!/bin/bash
+python3.7 modules/drivers/radar/umrr_radar/python/objects_classification/umrr_objects_classification.py -node_config modules/drivers/radar/umrr_radar/python/objects_classification/config/radar_object_classifier_conf_FL.json

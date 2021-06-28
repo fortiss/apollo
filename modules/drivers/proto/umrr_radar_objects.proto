@@ -23,6 +23,7 @@ message UmrrRadarObs {
   optional double lateral_vel = 6;
   optional double length = 7;   // obstacle width; unit = m
   optional bool updated_flag = 8; // true - if the reported track had been updated in the actual cycle, false - otherwise
+  optional int32 obstacle_type = 9; // 0 - BACKGROUND, 1 - PEDESTRIAN, 2 - CYCLIST, 3 - CAR
 }
 
 message UmrrRadar {

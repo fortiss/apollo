@@ -9,6 +9,8 @@ message PointXYZIT {
   optional float z = 3 [default = nan];
   optional uint32 intensity = 4 [default = 0];
   optional uint64 timestamp = 5 [default = 0];
+  optional float vel = 6 [default = 0];
+  optional float rcs = 7 [default = 0];
 }
 
 message PointCloud {

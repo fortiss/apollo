@@ -147,7 +147,7 @@ class crt_umrr_publisher:
         #json_format.Parse(data, self.can_conf, ignore_unknown_fields=False)  
 
         
-        self.pub = self.ummrr_node.create_writer("/apollo/radar/umrr_driver/FL", pc_2.PointCloud, qos_depth=2)        
+        self.pub = self.ummrr_node.create_writer(self.setup_conf.write_channel, pc_2.PointCloud, qos_depth=2)        
         self.frame_id = self.radar_conf.frame_id
 
         # CRT
@@ -434,7 +434,9 @@ class crt_umrr_publisher:
                 point.y = y
                 point.z = z
                 point.timestamp = int(cyber_time.Time.now().to_nsec())
-
+                
+                point.vel = target["Speed_Radial"]
+                point.rcs = target["RCS"]
 
                 #cloud_msg.point.append(point)
             except KeyError:
