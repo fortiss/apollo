@@ -22,6 +22,7 @@ namespace radar {
 const double PI = 3.1415926535898;
 const int MAX_RADAR_IDX = 2147483647;
 const double CONTI_ARS_INTERVAL = 0.074;
+const double UMRR_INTERVAL = 0.255;
 const int ORIGIN_CONTI_MAX_ID_NUM = 100;
 const double MIN_PROBEXIST = 0.08;
 
