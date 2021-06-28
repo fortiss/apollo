@@ -28,5 +28,6 @@ message UmrrRadarObs {
 message UmrrRadar {
   optional apollo.common.Header header = 1;
   optional string frame_id = 2;
-  repeated UmrrRadarObs umrrobs = 3;  // conti radar obstacle array
+  repeated UmrrRadarObs umrrobs = 3;  // umrr radar obstacle array
+  optional int32 cycle_duration = 4;
 }

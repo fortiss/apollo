@@ -30,4 +30,5 @@ message SetupConf{
   optional CanConf can_conf = 1;
   optional RadarConf radar_conf = 2;
   optional ModeSetup mode_setup = 3;
+  optional string write_channel = 4;
 }

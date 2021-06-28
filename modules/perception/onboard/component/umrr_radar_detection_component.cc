@@ -6,90 +6,202 @@ adapted from apollos radar node!
 
  *****************************************************************************/
 #include "modules/perception/onboard/component/umrr_radar_detection_component.h"
-#include "modules/perception/common/sensor_manager/sensor_manager.h"
-#include "modules/perception/lib/utils/perf.h"
-#include "modules/perception/radar/lib/interface/base_radar_obstacle_perception.h"
-#include "modules/perception/radar/common/radar_util.h"
 
 #include "modules/canbus/proto/fortuna.pb.h"
+#include "modules/perception/common/sensor_manager/sensor_manager.h"
+#include "modules/perception/lib/utils/perf.h"
+#include "modules/perception/radar/common/radar_util.h"
+#include "modules/perception/radar/lib/interface/umrr_base_radar_obstacle_perception.h"
 
 namespace apollo {
 namespace perception {
 namespace onboard {
 
 bool UmrrRadarDetectionComponent::Init() {
-  if (!GetProtoConfig(&comp_config_)) {
+  UmrrRadarComponentConfig comp_config;
+  if (!GetProtoConfig(&comp_config)) {
+    return false;
+  }
+  AINFO << "Umrr Radar Component Configs: " << comp_config.DebugString();
+
+  // To load component configs
+  tf_child_frame_id_ = comp_config.tf_child_frame_id();
+  radar_forward_distance_ = comp_config.radar_forward_distance();
+  preprocessor_method_ = comp_config.radar_preprocessor_method();
+  perception_method_ = comp_config.radar_perception_method();
+  pipeline_name_ = comp_config.radar_pipeline_name();
+  odometry_channel_name_ = comp_config.odometry_channel_name();
+
+  if (!common::SensorManager::Instance()->GetSensorInfo(
+          comp_config.radar_name(), &radar_info_)) {
+    AERROR << "Failed to get sensor info, sensor name: "
+           << comp_config.radar_name();
     return false;
   }
 
-  // configuration file is in modules/perception/production/conf/perception/umrr_radar/umrr_radar_component_conf_xx.pb.txt
-  AINFO << "Radar Component Configs: " << comp_config_.DebugString();
-
-  radar_info_.name = comp_config_.radar_name();
-  radar_info_.type = apollo::perception::base::SensorType::LONG_RANGE_RADAR;
-  radar_info_.orientation = apollo::perception::base::SensorOrientation::PANORAMIC;
-  radar_info_.frame_id = comp_config_.tf_child_frame_id();
-
-  // load component configs
-  tf_child_frame_id_ = comp_config_.tf_child_frame_id();
-  odometry_channel_name_ = comp_config_.odometry_channel_name();
-
   writer_ = node_->CreateWriter<SensorFrameMessage>(
-      comp_config_.output_channel_name());
+      comp_config.output_channel_name());
 
-  radar2world_trans_.Init(tf_child_frame_id_); 
-  radar2imar_trans_.Init(tf_child_frame_id_);
+  // Init algorithm plugin
+  CHECK(InitAlgorithmPlugin()) << "Failed to init algorithm plugin.";
+  radar2world_trans_.Init(tf_child_frame_id_);
+  radar2novatel_trans_.Init(tf_child_frame_id_);
   localization_subscriber_.Init(
       odometry_channel_name_,
-      odometry_channel_name_ + '_' + comp_config_.radar_name());
+      odometry_channel_name_ + '_' + comp_config.radar_name());
+      
   return true;
 }
 
-bool UmrrRadarDetectionComponent::Proc(const std::shared_ptr<ChassisDetail>& message) {
-  //!Todo add header to chassis_detail?
-  AINFO << "Enter fortuna radar process node at current timestamp " << lib::TimeUtil::GetCurrentTime();
-  std::shared_ptr<SensorFrameMessage> out_message(new (std::nothrow) SensorFrameMessage);
+bool UmrrRadarDetectionComponent::Proc(const std::shared_ptr<UmrrRadar>& message) {
+  AINFO << "Enter umrr radar preprocess, message timestamp: "
+        << std::to_string(message->header().timestamp_sec())
+        << " current timestamp " << lib::TimeUtil::GetCurrentTime();
+  std::shared_ptr<SensorFrameMessage> out_message(new (std::nothrow)
+                                                      SensorFrameMessage);
   if (!InternalProc(message, out_message)) {
     return false;
   }
   writer_->Write(out_message);
-  AINFO << "Send radar processing output message.";
+  AINFO << "Send umrr radar processing output message.";
+  return true;
+}
+
+bool UmrrRadarDetectionComponent::InitAlgorithmPlugin() {
+  AINFO << "onboard umrr radar_preprocessor: " << preprocessor_method_;
+  if (FLAGS_obs_enable_hdmap_input) {
+    hdmap_input_ = map::HDMapInput::Instance();
+    CHECK(hdmap_input_->Init()) << "Failed to init hdmap input.";
+  }
+
+  // EW preprocessor is initialized - in this case this is UmrrArsPreprocessor
+  radar::UmrrBasePreprocessor* preprocessor =
+      radar::UmrrBasePreprocessorRegisterer::GetInstanceByName(
+          preprocessor_method_);
+  CHECK_NOTNULL(preprocessor);
+  radar_preprocessor_.reset(preprocessor);
+  CHECK(radar_preprocessor_->Init()) << "Failed to init umrr radar preprocessor.";
+
+  //EW obstacle perception is initialized - in this case this is UmrrObstaclePerception
+  radar::UmrrBaseRadarObstaclePerception* radar_perception =
+      radar::UmrrBaseRadarObstaclePerceptionRegisterer::GetInstanceByName(
+          perception_method_);
+  CHECK(radar_perception != nullptr)
+      << "No umrr radar obstacle perception named: " << perception_method_;
+  radar_perception_.reset(radar_perception);
+
+  //EW initialization of a pipeline - in this case this is FL/FR/RL/RRUmrrRadarPipeline
+  CHECK(radar_perception_->Init(pipeline_name_))
+      << "Failed to init umrr radar perception.";
+  AINFO << "Init algorithm plugin successfully.";
   return true;
 }
 
 bool UmrrRadarDetectionComponent::InternalProc(
-    const std::shared_ptr<ChassisDetail>& in_message,
+    const std::shared_ptr<UmrrRadar>& in_message,
     std::shared_ptr<SensorFrameMessage> out_message) {
-  
-  double chassis_detail_time;
-  if(in_message->has_timestamp()) {
-    chassis_detail_time = in_message->timestamp();
-  } else {
-    //This is a hack that works if no latencies are in the system
-    chassis_detail_time = lib::TimeUtil::GetCurrentTime();
+  PERCEPTION_PERF_FUNCTION_WITH_INDICATOR(radar_info_.name);
+  UmrrRadar raw_obstacles = *in_message;
+  {
+    std::unique_lock<std::mutex> lock(_mutex);
+    ++seq_num_;
   }
+  double timestamp = in_message->header().timestamp_sec();
+  const double cur_time = lib::TimeUtil::GetCurrentTime();
+  const double start_latency = (cur_time - timestamp) * 1e3;
+  AINFO << "FRAME_STATISTICS:Radar:Start:msg_time[" << std::to_string(timestamp)
+        << "]:cur_time[" << std::to_string(cur_time) << "]:cur_latency["
+        << start_latency << "]";
 
-  GetRawRadarData(in_message, chassis_detail_time); // fills raw_radar_detections_
+  PERCEPTION_PERF_BLOCK_START();
+  // Init preprocessor_options
+  radar::PreprocessorOptions preprocessor_options;
+  UmrrRadar corrected_obstacles;
+  // EW in this case the preprocessor this is UmrrArsPreprocessor
+  radar_preprocessor_->Preprocess(raw_obstacles, preprocessor_options,
+                                  &corrected_obstacles);
+  PERCEPTION_PERF_BLOCK_END_WITH_INDICATOR(radar_info_.name,
+                                           "radar_preprocessor");
+  timestamp = corrected_obstacles.header().timestamp_sec();
 
-  if(!raw_radar_detections_.empty()) {
-    std::shared_ptr<LocalizationEstimate const> loct_ptr;
-    Eigen::Affine3d radar_trans;
-    if(!GetLocalizationAndTransform(in_message->has_timestamp(), chassis_detail_time, out_message, loct_ptr, radar_trans)) {
-      return false;
-    }
+  out_message->timestamp_ = timestamp;
+  out_message->seq_num_ = seq_num_;
+  out_message->process_stage_ = ProcessStage::UNIVERSAL_MEDIUM_RANGE_RADAR_DETECTION;
+  out_message->sensor_id_ = radar_info_.name;
 
-    // TODO: Add the ROI filter here?
+  // Init radar perception options
+  radar::RadarPerceptionOptions options;
+  options.sensor_name = radar_info_.name;
+  // Init detector_options
+  Eigen::Affine3d radar_trans;
+  if (!radar2world_trans_.GetSensor2worldTrans(timestamp, &radar_trans)) {
+    out_message->error_code_ = apollo::common::ErrorCode::PERCEPTION_ERROR_TF;
+    AERROR << "Failed to get pose at time: " << timestamp;
+    return true;
+  }
+  Eigen::Affine3d radar2novatel_trans;
+  if (!radar2novatel_trans_.GetTrans(timestamp, &radar2novatel_trans, "novatel",
+                                     tf_child_frame_id_)) {
+    out_message->error_code_ = apollo::common::ErrorCode::PERCEPTION_ERROR_TF;
+    AERROR << "Failed to get radar2novatel trans at time: " << timestamp;
+    return true;
+  }
+  PERCEPTION_PERF_BLOCK_END_WITH_INDICATOR(radar_info_.name,
+                                           "GetSensor2worldTrans");
+  Eigen::Matrix4d radar2world_pose = radar_trans.matrix();
+  options.detector_options.radar2world_pose = &radar2world_pose;
+  Eigen::Matrix4d radar2novatel_trans_m = radar2novatel_trans.matrix();
+  options.detector_options.radar2novatel_trans = &radar2novatel_trans_m;
+  if (!GetCarLocalizationSpeed(timestamp,
+                               &(options.detector_options.car_linear_speed),
+                               &(options.detector_options.car_angular_speed))) {
+    AERROR << "Failed to call get_car_speed. [timestamp: "
+           << std::to_string(timestamp);
+    // return false;
+  }
+  PERCEPTION_PERF_BLOCK_END_WITH_INDICATOR(radar_info_.name, "GetCarSpeed");
+  // Init roi_filter_options
+  base::PointD position;
+  position.x = radar_trans(0, 3);
+  position.y = radar_trans(1, 3);
+  position.z = radar_trans(2, 3);
+  options.roi_filter_options.roi.reset(new base::HdmapStruct());
+  if (FLAGS_obs_enable_hdmap_input) {
+    hdmap_input_->GetRoiHDMapStruct(position, radar_forward_distance_,
+                                    options.roi_filter_options.roi);
+  }
+  PERCEPTION_PERF_BLOCK_END_WITH_INDICATOR(radar_info_.name,
+                                           "GetRoiHDMapStruct");
+  // Init object_filter_options
+  // Init track_options
+  // Init object_builder_options
+  std::vector<base::ObjectPtr> radar_objects;
+  if (!radar_perception_->Perceive(corrected_obstacles, options,
+                                   &radar_objects)) {
+    out_message->error_code_ =
+        apollo::common::ErrorCode::PERCEPTION_ERROR_PROCESS;
+    AERROR << "RadarDetector Proc failed.";
+    return true;
+  }
+  out_message->frame_.reset(new base::Frame());
+  out_message->frame_->sensor_info = radar_info_;
+  out_message->frame_->timestamp = timestamp;
+  out_message->frame_->sensor2world_pose = radar_trans;
+  out_message->frame_->objects = radar_objects;
 
-    if(!FillSensorFrameMessage(out_message, radar_trans, loct_ptr, chassis_detail_time)) {
-      return false;
-    }
-  } 
+  const double end_timestamp = lib::TimeUtil::GetCurrentTime();
+  const double end_latency =
+      (end_timestamp - in_message->header().timestamp_sec()) * 1e3;
+  PERCEPTION_PERF_BLOCK_END_WITH_INDICATOR(radar_info_.name,
+                                           "radar_perception");
+  AINFO << "FRAME_STATISTICS:Radar:End:msg_time["
+        << std::to_string(in_message->header().timestamp_sec()) << "]:cur_time["
+        << std::to_string(end_timestamp) << "]:cur_latency[" << end_latency
+        << "]";
 
-  out_message->error_code_ = apollo::common::ErrorCode::OK;
-  seq_num_ += 1;
   return true;
 }
-/*
+
 bool UmrrRadarDetectionComponent::GetCarLocalizationSpeed(
     double timestamp, Eigen::Vector3f* car_linear_speed,
     Eigen::Vector3f* car_angular_speed) {
@@ -117,206 +229,6 @@ bool UmrrRadarDetectionComponent::GetCarLocalizationSpeed(
 
   return true;
 }
-*/
-
-bool UmrrRadarDetectionComponent::FillSensorFrameMessage(
-  std::shared_ptr<SensorFrameMessage>& out_message,
-  const Eigen::Affine3d& radar_trans,
-  const std::shared_ptr<LocalizationEstimate const>& loct_ptr,
-  const double& chassis_detail_time) {
-
-    // Fill output msg general fields
-    out_message->frame_.reset(new base::Frame());
-    out_message->frame_->sensor_info = radar_info_;
-    out_message->frame_->timestamp = chassis_detail_time;
-    out_message->frame_->sensor2world_pose = radar_trans;
-    out_message->timestamp_ = chassis_detail_time;
-    out_message->seq_num_ = seq_num_;
-    out_message->process_stage_ = ProcessStage::LONG_RANGE_RADAR_DETECTION;
-    out_message->sensor_id_ = radar_info_.name;
-
-    // Default values for non-available fields
-    const float dummy_confidence = comp_config_.dummy_confidence();
-    const float dummy_uncertainty = comp_config_.dummy_uncertainty();
-    const float dummy_object_length = comp_config_.dummy_object_length();
-    const float dummy_object_width = comp_config_.dummy_object_width();
-    const float dummy_object_height = comp_config_.dummy_object_height();
-    const base::MotionState dummy_motion_state = base::MotionState::MOVING; // ???
-    const base::ObjectType dummy_type = base::ObjectType::VEHICLE; //???
-    const Eigen::Matrix4d radar2world_pose = radar_trans.matrix();
-
-    // Loop over all raw objects and translate to base::Objects
-    for(auto &raw_obj : raw_radar_detections_) {
-      
-      base::ObjectPtr radar_object = std::make_shared<base::Object>();
-
-      radar_object->id = raw_obj.id;
-      //radar_object->track_id = ??? // TODO!
-      Eigen::Vector4d local_loc(raw_obj.x,
-                              raw_obj.y, 0, 1);
-      Eigen::Vector4d world_loc =
-        static_cast<Eigen::Matrix<double, 4, 1, 0, 4, 1>>(radar2world_pose *
-                                                          local_loc);
-      radar_object->center = world_loc.block<3, 1>(0, 0);
-      radar_object->anchor_point = radar_object->center;
-      Eigen::Vector3d local_vel(raw_obj.v, 0.0, 0.0);
-      Eigen::Matrix3d radar2world_rotate = radar2world_pose.block<3, 3>(0, 0);
-      Eigen::Vector3d world_vel =
-          static_cast<Eigen::Matrix<double, 3, 1, 0, 3, 1> >(
-              radar2world_rotate * local_vel);
-      Eigen::Vector3d vehicle_vel(loct_ptr->pose().linear_velocity().x(),
-                                  loct_ptr->pose().linear_velocity().y(),
-                                  loct_ptr->pose().linear_velocity().z());
-      radar_object->velocity = (vehicle_vel + world_vel).cast<float>();
-      radar_object->center_uncertainty.setIdentity() * dummy_uncertainty;
-      radar_object->velocity_uncertainty.setIdentity() * dummy_uncertainty;
-      double ego_theta = loct_ptr->pose().heading(); // for the production radar sensors == obstacle orientation!
-      Eigen::Vector3f direction(static_cast<float>(cos(ego_theta)),
-                               static_cast<float>(sin(ego_theta)), 0.0f);
-      direction = radar2world_rotate.cast<float>() * direction;
-      radar_object->direction = direction;
-      radar_object->theta = std::atan2(direction(1), direction(0)); //== heading?
-      radar_object->theta_variance = dummy_uncertainty;
-      radar_object->confidence = dummy_confidence;
-      radar_object->motion_state = dummy_motion_state;
-      radar_object->type = dummy_type;
-      radar_object->size(0) = dummy_object_length;
-      radar_object->size(1) = dummy_object_width;
-      radar_object->size(2) = dummy_object_height; 
-      apollo::perception::radar::MockRadarPolygon(radar_object);
-      float local_range = static_cast<float>(local_loc.head(2).norm());
-      float local_angle =
-          static_cast<float>(std::atan2(local_loc(1), local_loc(0)));
-      radar_object->radar_supplement.range = local_range;
-      radar_object->radar_supplement.angle = local_angle;
-
-      out_message->frame_->objects.push_back(radar_object);
-
-      ADEBUG  << "Postprocessed Radar Obj: " 
-              << " id = " << radar_object->id 
-              << " x = " << radar_object->center.x() 
-              << " y = " << radar_object->center.y() 
-              << " v_x = " << radar_object->velocity.x() 
-              << " v_y = " << radar_object->velocity.y();
-    }
-
-  return true;
-  }
-
-//! From the provided timestamp, get the matching localization and tf; use latest loca if no timestamp provided
-bool UmrrRadarDetectionComponent::GetLocalizationAndTransform(
-  const bool& chassis_detail_has_time, 
-  const double& chassis_detail_time,
-  std::shared_ptr<SensorFrameMessage>& out_message, 
-  std::shared_ptr<LocalizationEstimate const>& loct_ptr, 
-  Eigen::Affine3d& radar_trans) {
-    // Get Localization and Time
-    double transformation_timestamp;
-    if(chassis_detail_has_time) { //if the timestamp is provided by the chassis detail msg
-      if(!localization_subscriber_.LookupNearest(chassis_detail_time, &loct_ptr)) { 
-        out_message->error_code_ = apollo::common::ErrorCode::PERCEPTION_ERROR_UNKNOWN;
-        AERROR << "Could not get loclization at time " << chassis_detail_time;
-        return false;
-      }
-      transformation_timestamp = chassis_detail_time;
-    } else { //if chassis detail does not provide a timestamp
-      if (!localization_subscriber_.LookupLatest(&loct_ptr)) { 
-        out_message->error_code_ = apollo::common::ErrorCode::PERCEPTION_ERROR_UNKNOWN;
-        AERROR << "Could not get latest loclization!";
-        return false;
-      } 
-      transformation_timestamp = loct_ptr->header().timestamp_sec();
-    }
-
-    // Get Transform
-    // For fortuna built -in radars we consider radar detecions pre-calibrated in
-    // ego frame (mid point of rear-vehicle axis)
-    radar_trans.setIdentity();
-    if (!radar2world_trans_.GetSensor2worldTrans(transformation_timestamp, &radar_trans)) { //! TODO using the loca timestamp here is a hack!! we have to get the timestamp into chassis detail!
-      out_message->error_code_ = apollo::common::ErrorCode::PERCEPTION_ERROR_TF;
-      AERROR << "Failed to get pose at time: " << transformation_timestamp;
-      return false;
-    }
-
-    return true;
-  }
-
-//! Gather all radar data from Chassis Detail Msg and store it in raw_radar_detections_
-bool UmrrRadarDetectionComponent::GetRawRadarData(
-  const std::shared_ptr<ChassisDetail>& in_message,
-  const double& chassis_detail_time) {
-      
-  raw_radar_detections_.clear();
-
-  if (in_message->has_fortuna()) {
-    if(in_message->mutable_fortuna()->has_front_object_1()) {
-      ProcessFrontObject(in_message->mutable_fortuna()->mutable_front_object_1());
-    }
-    if(in_message->mutable_fortuna()->has_front_object_2()) {
-      ProcessFrontObject(in_message->mutable_fortuna()->mutable_front_object_2());
-    }
-    if(in_message->mutable_fortuna()->has_front_object_3()) {
-      ProcessFrontObject(in_message->mutable_fortuna()->mutable_front_object_3());
-    }
-    if(in_message->mutable_fortuna()->has_front_object_4()) {
-      ProcessFrontObject(in_message->mutable_fortuna()->mutable_front_object_4());
-    }
-    if(in_message->mutable_fortuna()->has_rear_object_1()) {
-      ProcessRearObject(in_message->mutable_fortuna()->mutable_rear_object_1());
-    }
-    if(in_message->mutable_fortuna()->has_rear_object_2()) {
-      ProcessRearObject(in_message->mutable_fortuna()->mutable_rear_object_2());
-    }
-    if(in_message->mutable_fortuna()->has_rear_object_3()) {
-      ProcessRearObject(in_message->mutable_fortuna()->mutable_rear_object_3());
-    }
-    if(in_message->mutable_fortuna()->has_rear_object_4()) {
-      ProcessRearObject(in_message->mutable_fortuna()->mutable_rear_object_4());
-    }
-    if(in_message->mutable_fortuna()->has_rear_object_5()) {
-      ProcessRearObject(in_message->mutable_fortuna()->mutable_rear_object_5());
-    }
-    if(in_message->mutable_fortuna()->has_rear_object_6()) {
-      ProcessRearObject(in_message->mutable_fortuna()->mutable_rear_object_6());
-    }
-  }
-  
-  // Debug outputs
-  if(!raw_radar_detections_.empty()) {
-    for(auto &entry : raw_radar_detections_) {
-      ADEBUG << "Raw Radar Object at time = "  << chassis_detail_time << " id = " << entry.id << " x = " << entry.x << " y = " << entry.y << " v = " << entry.v;
-    }
-  }
-
-  return true;
-}
-
-//! Read the raw can data for a front object message and parse it into the raw_radar_detections_ vector
-template<class UmrrRadarCanFrame>
-  void UmrrRadarDetectionComponent::ProcessFrontObject(const UmrrRadarCanFrame obj) {
-    if(obj->id() != 0) { //object is valid
-        RawRadarDetections rrd;
-        rrd.id = obj->id();
-        rrd.x = obj->rel_pos_x();
-        rrd.y = obj->rel_pos_y();
-        rrd.v = obj->rel_velocity_x();
-        raw_radar_detections_.push_back(rrd);
-      }
-  }
-
-  //! Read the raw can data for a rear object message and parse it into the raw_radar_detections_ vector
-  template<class UmrrRadarCanFrame>
-  void UmrrRadarDetectionComponent::ProcessRearObject(const UmrrRadarCanFrame obj) {
-    if(obj->rear_id() != 0) { //object is valid
-        RawRadarDetections rrd;
-        rrd.id = obj->rear_id();
-        rrd.x = obj->rear_pos_x();
-        rrd.y = obj->rear_pos_y();
-        rrd.v = obj->rear_rel_velocity_x();
-        raw_radar_detections_.push_back(rrd);
-      }
-  }
-
 
 }  // namespace onboard
 }  // namespace perception

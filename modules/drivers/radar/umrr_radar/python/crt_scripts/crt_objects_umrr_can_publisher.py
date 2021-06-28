@@ -8,7 +8,7 @@ sys.path.insert(1, '/apollo/modules/drivers/radar/umrr_radar/python/src/')
 sys.path.insert(1, '/apollo/modules/common/proto/')
 sys.path.insert(1, '/apollo/modules/drivers/radar/umrr_radar/python/crt_proto/')
 
-import umrr_radar_conf_pb2 as obj_2
+import umrr_radar_objects_pb2 as obj_2
 
 # from apollo.modules.drivers.proto.pointcloud_pb2 import pointcloud_pb2 as pc_2
 # import apollo.drivers.pointcloud_pb2 as pc_2

@@ -49,6 +49,27 @@ cc_library(
 )
 
 cc_library(
+    name = "umrr_base_detector",
+    hdrs = [
+        "umrr_base_detector.h",
+    ],
+)
+
+cc_library(
+    name = "umrr_base_preprocessor",
+    hdrs = [
+        "umrr_base_preprocessor.h",
+    ],
+)
+
+cc_library(
+    name = "umrr_base_radar_obstacle_perception",
+    hdrs = [
+        "umrr_base_radar_obstacle_perception.h",
+    ],
+)
+
+cc_library(
     name = "base_roi_filter",
     hdrs = ["base_roi_filter.h"],
 )

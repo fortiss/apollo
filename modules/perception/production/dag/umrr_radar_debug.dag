@@ -7,45 +7,12 @@ module_config {
       name: "UmrrProductionRadarDetectionFL"
       config_file_path: "/apollo/modules/perception/production/conf/perception/umrr_radar/umrr_radar_component_conf_fl.pb.txt"
       readers {
-          channel: "/apollo/canbus/chassis_detail"
+          channel: "/apollo/sensor/radar/fortiss/FL"
         }
     }
   }
 
   components {
-    class_name: "UmrrRadarDetectionComponent"
-    config {
-      name: "UmrrProductionRadarDetectionFR"
-      config_file_path: "/apollo/modules/perception/production/conf/perception/umrr_radar/umrr_radar_component_conf_fr.pb.txt"
-      readers {
-          channel: "/apollo/canbus/chassis_detail"
-        }
-    }
-  }
-
-  components {
-    class_name: "UmrrRadarDetectionComponent"
-    config {
-      name: "UmrrProductionRadarDetectionRL"
-      config_file_path: "/apollo/modules/perception/production/conf/perception/umrr_radar/umrr_radar_component_conf_rl.pb.txt"
-      readers {
-          channel: "/apollo/canbus/chassis_detail"
-        }
-    }
-  }
-
-  components {
-    class_name: "UmrrRadarDetectionComponent"
-    config {
-      name: "UmrrProductionRadarDetectionRR"
-      config_file_path: "/apollo/modules/perception/production/conf/perception/umrr_radar/umrr_radar_component_conf_rr.pb.txt"
-      readers {
-          channel: "/apollo/canbus/chassis_detail"
-        }
-    }
-  }
-
-   components {
     class_name : "SegmentationComponent"
     config {
       name: "Velodyne32Segmentation"

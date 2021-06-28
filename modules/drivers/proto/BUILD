@@ -22,6 +22,7 @@ proto_library(
         "sensor_image.proto",
         "ultrasonic_radar.proto",
         "fortiss_hardware_status.proto",
+        "umrr_radar_objects.proto",
     ],
     deps = [
         "//modules/common/proto:error_code_proto_lib",
