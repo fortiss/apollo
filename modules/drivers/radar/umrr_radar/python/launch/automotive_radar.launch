@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- load configuration file -->
+    <arg name="config_file" default="$(find umrr_driver)/cfg/config.yaml" />
+    <arg name="can_spec" default="$(find umrr_driver)/can_spec/automotive_spec.json" />
+    <arg name ="node_namespace" default ="radar" />
+    <arg name="can_socket" default="can0" />
+
+    <!-- Group nodes to provide convenient way of starting multiple nodes -->
+    <group ns="$(arg node_namespace)">
+        <rosparam file="$(arg config_file)" command="load"/>
+        <node name="umrr_can_publisher" pkg="umrr_driver" type="umrr_can_publisher" output="screen" >
+        <!-- necessary because ros is not able to solve relative paths in yaml file -->
+            <param name ="can_spec" value="$(arg can_spec)" />
+            <param name ="can_socket" value="$(arg can_socket)" />
+        </node>
+        <node name="pcl_filter" pkg="umrr_driver" type="pc2_filter.py"/>
+        <node name="coord_converter" pkg="umrr_driver" type="spherical_coord_2_cartesian_coord" output="screen"/>
+    </group>
+</launch>

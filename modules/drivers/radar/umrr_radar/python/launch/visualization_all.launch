@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find umrr_driver)/cfg/default.rviz" />
+  <node name="base_link_2_radar_FR" pkg="tf2_ros" type="static_transform_publisher" args="3.47 -0.67 0.53 -0.628318 0 0 base_link radar_FR" />
+  <node name="base_link_2_radar_FL" pkg="tf2_ros" type="static_transform_publisher" args="3.47 0.67 0.53 0.628318 0 0 base_link radar_FL" />
+  <node name="base_link_2_radar_RR" pkg="tf2_ros" type="static_transform_publisher" args="-1.065 -0.54 0.45 -2.70526 0 0 base_link radar_RR" />
+  <node name="base_link_2_radar_RL" pkg="tf2_ros" type="static_transform_publisher" args="-1.065 0.54 0.45 2.705260 0 0 base_link radar_RL" />
+</launch>

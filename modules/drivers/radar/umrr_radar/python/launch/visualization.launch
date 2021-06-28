@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find umrr_driver)/cfg/default.rviz" />
+  <node name="base_link_2_radar" pkg="tf" type="static_transform_publisher" args="0 0 1 0 0 0 base_link radar 10" />
+</launch>

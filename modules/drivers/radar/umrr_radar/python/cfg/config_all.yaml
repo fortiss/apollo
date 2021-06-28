@@ -1,0 +1,34 @@
+umrr_can_publisher_FR:
+  frame_id: "radar_FR"
+  can_socket: "can0"
+  debug: 0
+  # parameters to send to sensor
+  antenna_mode: {section: 3016, parameter: 0, value: 1}
+  # center_frequency: {section: 3016, parameter: 5, value: 2}
+
+
+umrr_can_publisher_FL:
+  frame_id: "radar_FL"
+  can_socket: "can1"
+  debug: 0
+  # parameters to send to sensor
+  antenna_mode: {section: 3016, parameter: 0, value: 1}
+  # center_frequency: {section: 3016, parameter: 5, value: 2}
+
+
+umrr_can_publisher_RR:
+  frame_id: "radar_RR"
+  can_socket: "can2"
+  debug: 0
+  # parameters to send to sensor
+  antenna_mode: {section: 3016, parameter: 0, value: 1}
+  # center_frequency: {section: 3016, parameter: 5, value: 2}
+
+
+umrr_can_publisher_RL:
+  frame_id: "radar_RL"
+  can_socket: "can3"
+  debug: 0
+  # parameters to send to sensor
+  antenna_mode: {section: 3016, parameter: 0, value: 1}
+  # center_frequency: {section: 3016, parameter: 5, value: 2}

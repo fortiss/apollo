@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- load configuration file -->
+    <!--arg name="config_file" default="$(find umrr_driver)/cfg/config_all.yaml" /-->
+    <arg name="can_spec" default="$(find umrr_driver)/can_spec/automotive_spec.json" />
+
+    <!-- Group nodes to provide convenient way of starting multiple nodes -->
+    <group ns="radar_FR">
+        <rosparam file="$(find umrr_driver)/cfg/config_FR.yaml" command="load"/>
+        <node name="umrr_can_publisher_FR" pkg="umrr_driver" type="umrr_can_publisher" output="screen" >
+        <!-- necessary because ros is not able to solve relative paths in yaml file -->
+            <param name ="can_spec" value="$(arg can_spec)" />
+	    <!--remap from="target_list" to="target_list_0" /-->
+        </node>
+        <node name="pcl_filter" pkg="umrr_driver" type="pc2_filter.py"/>
+        <node name="coord_converter" pkg="umrr_driver" type="spherical_coord_2_cartesian_coord" output="screen"/>
+    </group>
+
+    <group ns="radar_FL">
+        <rosparam file="$(find umrr_driver)/cfg/config_FL.yaml" command="load"/>
+        <node name="umrr_can_publisher_FL" pkg="umrr_driver" type="umrr_can_publisher" output="screen" >
+        <!-- necessary because ros is not able to solve relative paths in yaml file -->
+            <param name ="can_spec" value="$(arg can_spec)" />
+	    <!--remap from="target_list" to="target_list_0" /-->
+        </node>
+        <node name="pcl_filter" pkg="umrr_driver" type="pc2_filter.py"/>
+        <node name="coord_converter" pkg="umrr_driver" type="spherical_coord_2_cartesian_coord" output="screen"/>
+
+    </group>
+    <group ns="radar_RR">
+        <rosparam file="$(find umrr_driver)/cfg/config_RR.yaml" command="load"/>
+        <node name="umrr_can_publisher_RR" pkg="umrr_driver" type="umrr_can_publisher" output="screen" >
+        <!-- necessary because ros is not able to solve relative paths in yaml file -->
+            <param name ="can_spec" value="$(arg can_spec)" />
+	    <!--remap from="target_list" to="target_list_0" /-->
+        </node>
+        <node name="pcl_filter" pkg="umrr_driver" type="pc2_filter.py"/>
+        <node name="coord_converter" pkg="umrr_driver" type="spherical_coord_2_cartesian_coord" output="screen"/>
+    </group>
+
+
+    <group ns="radar_RL">
+        <rosparam file="$(find umrr_driver)/cfg/config_RL.yaml" command="load"/>
+        <node name="umrr_can_publisher_RL" pkg="umrr_driver" type="umrr_can_publisher" output="screen" >
+        <!-- necessary because ros is not able to solve relative paths in yaml file -->
+            <param name ="can_spec" value="$(arg can_spec)" />
+	    <!--remap from="target_list" to="target_list_0" /-->
+        </node>
+        <node name="pcl_filter" pkg="umrr_driver" type="pc2_filter.py"/>
+        <node name="coord_converter" pkg="umrr_driver" type="spherical_coord_2_cartesian_coord" output="screen"/>
+    </group>
+
+</launch>

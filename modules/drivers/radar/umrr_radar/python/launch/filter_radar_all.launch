@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- load configuration file -->
+    <arg name="can_spec" default="$(find umrr_driver)/can_spec/automotive_spec.json" />
+
+    <!-- Group nodes to provide convenient way of starting multiple nodes -->
+    <group ns="radar_0">
+        <node name="pcl_filter" pkg="umrr_driver" type="pc2_filter.py"/>
+        <node name="coord_converter" pkg="umrr_driver" type="spherical_coord_2_cartesian_coord" output="screen"/>
+    </group>
+
+    <group ns="radar_1">
+        <node name="pcl_filter" pkg="umrr_driver" type="pc2_filter.py"/>
+        <node name="coord_converter" pkg="umrr_driver" type="spherical_coord_2_cartesian_coord" output="screen"/>
+    </group>
+
+    <group ns="radar_2">
+        <node name="pcl_filter" pkg="umrr_driver" type="pc2_filter.py"/>
+        <node name="coord_converter" pkg="umrr_driver" type="spherical_coord_2_cartesian_coord" output="screen"/>
+    </group>
+
+
+    <group ns="radar_3">
+        <node name="pcl_filter" pkg="umrr_driver" type="pc2_filter.py"/>
+        <node name="coord_converter" pkg="umrr_driver" type="spherical_coord_2_cartesian_coord" output="screen"/>
+    </group>
+
+</launch>

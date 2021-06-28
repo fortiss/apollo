@@ -1,0 +1,33 @@
+syntax = "proto2";
+
+package apollo.drivers.radar.umrr_driver;
+
+import "modules/drivers/canbus/proto/can_card_parameter.proto";
+
+message CanConf {  
+  optional apollo.drivers.canbus.CANCardParameter can_card_parameter = 1;
+  optional bool enable_debug_mode = 2 [default = false];
+  optional bool enable_receiver_log = 3 [default = false];
+  optional bool enable_sender_log = 4 [default = false];
+  optional string can_spec = 5;
+}
+
+message RadarConf {
+  required string frame_id = 1;
+  optional string can_socket = 2;
+  optional int32 debug = 3;
+  optional ModeSetup antenna_mode = 4;
+  optional ModeSetup center_frequency = 5;
+}
+
+message ModeSetup {
+  optional int32 section = 1;
+  optional int32 parameter = 2;
+  optional int32 value = 3;
+}
+
+message SetupConf{
+  optional CanConf can_conf = 1;
+  optional RadarConf radar_conf = 2;
+  optional ModeSetup mode_setup = 3;
+}

@@ -1,0 +1,7 @@
+umrr_can_publisher:
+  frame_id: "radar"
+  can_socket: "slcan0"
+  debug: 0
+  # parameters to send to sensor
+  antenna_mode: {section: 3016, parameter: 0, value: 1}
+  # center_frequency: {section: 3016, parameter: 5, value: 2}
