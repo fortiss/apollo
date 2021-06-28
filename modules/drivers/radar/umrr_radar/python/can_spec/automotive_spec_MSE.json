@@ -20,8 +20,8 @@
           "y_Point"        : {"offset" :    4096,"resolution" : 0.128    , "start_byte" : 1, "start_bit" : 7, "end_byte" : 3, "end_bit" : 3},
           "Speed"        : {"offset" :    1024,"resolution" : 0.1    , "start_byte" : 3, "start_bit" : 4, "end_byte" : 4, "end_bit" : 6},
           "Heading"        : {"offset" :    1024,"resolution" : 0.177    , "start_byte" : 4, "start_bit" : 7, "end_byte" : 6, "end_bit" : 1},
-          "Len"        : {"offset" :    0,"resolution" : 0.2    , "start_byte" : 6, "start_bit" : 2, "end_byte" : 7, "end_bit" : 0},
-          "ID" : {"offset" : 0,"resolution" : 1.0    , "start_byte" : 7, "start_bit" : 1, "end_byte" : 7, "end_bit" : 7}
+          "Object_Length"        : {"offset" :    0,"resolution" : 0.2    , "start_byte" : 6, "start_bit" : 2, "end_byte" : 7, "end_bit" : 0},
+          "Object_ID" : {"offset" : 0,"resolution" : 1.0    , "start_byte" : 7, "start_bit" : 1, "end_byte" : 7, "end_bit" : 7}
              },
        "1"          :{
           "Quality"      : {"offset" : 0,"resolution" : 0.001,"start_byte" : 0,"start_bit" : 2,"end_byte" : 1,"end_bit" : 4},

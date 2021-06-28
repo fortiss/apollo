@@ -7,11 +7,11 @@
     },
     "enable_debug_mode": false,
     "enable_receiver_log": false,
-    "can_spec": "/apollo/modules/drivers/radar/umrr_radar/python/can_spec/automotive_spec_objects.json"
+    "can_spec": "/apollo/modules/drivers/radar/umrr_radar/python/can_spec/automotive_spec_MSE.json"
   },
   
   "radar_conf": {
-    "frame_id": "radar_FL",
+    "frame_id": "umrr_radar_FL",
     "can_socket": "can0",
     "debug": 0,
     "antenna_mode": {

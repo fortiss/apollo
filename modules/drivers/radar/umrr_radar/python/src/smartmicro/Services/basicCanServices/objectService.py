@@ -48,10 +48,10 @@ class CanIDServiceObjectList(CanIDService):
         msg = self.recvQueue.get(block=True, timeout=timeout)
 
         ## iterating until msg taken from the que is the one with can id that relates to objects 
-        while msg['canID'] != self.objectListSpec['header']['CanId']:
+        while msg['canID'] != self.objectListSpec['header']['canId']:
             msg = self.recvQueue.get()
 
-        headerSpec = self.objectListSpec['header']['Elements']
+        headerSpec = self.objectListSpec['header']['0']
 
         ## we are getting here dictionary
         header = self.__decodeMsgElements(msg['data'], headerSpec)
@@ -60,7 +60,8 @@ class CanIDServiceObjectList(CanIDService):
         objects = []
         for i in range(0, int(header['Number_Of_Objects'])):
 
-            _object = self.__decodeObjectMessage(self.recvQueue.get()['data'], header['Object_data0_format'])
+            _object = self.__decodeObjectMessage(self.recvQueue.get()['data'])
+            _object.update(self.__decodeObjectMessage(self.recvQueue.get()['data']))
             _object.update(header)
 
             objects.append(deepcopy(_object))
@@ -71,7 +72,7 @@ class CanIDServiceObjectList(CanIDService):
     # ---------------------------------------------------------------------------------------------------------------- #
     # function: __decodeObjectMessage                                                                                  #
     # ---------------------------------------------------------------------------------------------------------------- #
-    def __decodeObjectMessage(self, msg, format):
+    def __decodeObjectMessage(self, msg):
         """
         The current function will deal with the multiframe state of the can message. It will call the correct decoding
         style.
@@ -87,12 +88,12 @@ class CanIDServiceObjectList(CanIDService):
             The return value is the decoded object from the message
         """
 
-        if format == 3:
-            frame = 'format0'
-        else: # else it should be 4
-            frame = 'format1'
+        if ( msg[0] ) & 0x1 == 0:
+            frame = '0'
+        else:
+            frame = '1'
 
-        return self.__decodeMsgElements(msg, self.objectListSpec[frame]['Elements'])
+        return self.__decodeMsgElements(msg, self.objectListSpec['body'][frame])
 
     # ---------------------------------------------------------------------------------------------------------------- #
     # function: __decodeMsgElements                                                                                    #

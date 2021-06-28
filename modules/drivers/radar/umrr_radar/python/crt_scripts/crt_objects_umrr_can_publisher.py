@@ -429,12 +429,12 @@ class crt_umrr_object_publisher:
                 idt_obj.obstacle_id = _object["Object_ID"]
                 idt_obj.longitude_dist = _object["x_Point1"]
                 idt_obj.lateral_dist = _object["y_Point1"]
-                idt_obj.longitude_vel = _object["Speed_x"]
-                idt_obj.lateral_vel = _object["Speed_y"]
+                idt_obj.longitude_vel = _object["Speed"]
+                idt_obj.lateral_vel = _object["Speed"]
                 idt_obj.length = _object["Object_Length"]
 
-                if _object.get("Updated_Flag") != None:
-                    idt_obj.updated_flag = _object["Updated_Flag"]
+                # if _object.get("Updated_Flag") != None:
+                #     idt_obj.updated_flag = _object["Updated_Flag"]
 
             except KeyError:
                 # CRT
