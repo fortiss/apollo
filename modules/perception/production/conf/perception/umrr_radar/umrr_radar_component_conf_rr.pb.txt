@@ -1,0 +1,9 @@
+radar_name: "umrr_radar"
+tf_child_frame_id: "umrr_radar"
+odometry_channel_name: "/apollo/localization/pose"
+output_channel_name: "/perception/inner/PrefusedObjects"
+dummy_confidence: 0.5
+dummy_uncertainty: 0.1
+dummy_object_length: 2.2
+dummy_object_width: 2.2
+dummy_object_height: 2.2

@@ -1,0 +1,48 @@
+extrinsic_file {
+    frame_id: "localization"
+    child_frame_id: "imar"
+    file_path: "/apollo/modules/localization/msf/params/imar_localization_extrinsics.yaml"
+    enable: true
+}
+
+extrinsic_file {
+    frame_id: "imar"
+    child_frame_id: "velodyne32"
+    file_path: "/apollo/modules/drivers/velodyne/params/velodyne32_imar_extrinsics.yaml"
+    enable: true
+}
+
+extrinsic_file {
+    frame_id: "velodyne32"
+    child_frame_id: "front_6mm"
+    file_path: "/apollo/modules/perception/data/params/front_6mm_extrinsics.yaml"
+    enable: true
+}
+
+extrinsic_file {
+    frame_id: "novatel"
+    child_frame_id: "fortuna_production_radar"
+    file_path: "/apollo/modules/transform/conf/novatel_to_radar.yaml"
+    enable: true
+}
+
+extrinsic_file {
+    frame_id: "novatel"
+    child_frame_id: "umrr_radar"
+    file_path: "/apollo/modules/transform/conf/novatel_to_umrr_radar.yaml"
+    enable: true
+}
+
+extrinsic_file {
+    frame_id: "localization"
+    child_frame_id: "novatel"
+    file_path: "/apollo/modules/transform/conf/localization_to_novatel.yaml"
+    enable: true
+}
+
+extrinsic_file {
+    frame_id: "world"
+    child_frame_id: "localization"
+    file_path: "/apollo/modules/transform/conf/dummy_world_to_localization.yaml"
+    enable: false
+}

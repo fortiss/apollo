@@ -1,0 +1,18 @@
+# Dummy localization in UTM zone 32 frame
+child_frame_id: fortuna_production_radar
+transform:
+  translation:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+header:
+  seq: 0
+  stamp:
+    secs: 1512689414
+    nsecs: 0
+  frame_id: novatel

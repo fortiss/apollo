@@ -1,0 +1,32 @@
+syntax = "proto2";
+
+package apollo.drivers;
+
+import "modules/common/proto/header.proto";
+
+message UmrrRadarObs {
+  //                x axis  ^
+  //                        | longitude_dist
+  //                        |
+  //                        |
+  //                        |
+  //          lateral_dist  |
+  //          y axis        |
+  //        <----------------
+  //        ooooooooooooo   //radar front surface
+
+  optional apollo.common.Header header = 1;
+  optional int32 obstacle_id = 2;    // obstacle Id
+  optional double longitude_dist = 3;
+  optional double lateral_dist = 4;
+  optional double longitude_vel = 5;
+  optional double lateral_vel = 6;
+  optional double length = 7;   // obstacle width; unit = m
+  optional bool updated_flag = 8; // true - if the reported track had been updated in the actual cycle, false - otherwise
+}
+
+message UmrrRadar {
+  optional apollo.common.Header header = 1;
+  optional string frame_id = 2;
+  repeated UmrrRadarObs umrrobs = 3;  // conti radar obstacle array
+}

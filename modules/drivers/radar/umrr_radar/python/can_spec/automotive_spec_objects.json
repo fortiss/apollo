@@ -1,0 +1,41 @@
+{
+"header" : {
+	"CanId" : 1024,
+	"Elements"   : {
+		"Number_Of_Objects"	: {"offset" :    0,"resolution" : 1       , "start_byte": 0, "start_bit": 0, "end_byte": 0, "end_bit": 7 },
+		"Number_Of_Messages": {"offset":	 0,"resolution" : 1		  , "start_byte": 1, "start_bit": 0, "end_byte": 1, "end_bit": 7 },
+		"Cycle_Duration": 	  {"offset":	 0,"resolution" : 1		  , "start_byte": 2, "start_bit": 0, "end_byte": 2, "end_bit": 7 },
+		"Object_data0_format":{"offset":	 0,"resolution" : 1		  , "start_byte": 3, "start_bit": 0, "end_byte": 3, "end_bit": 3 },
+		"Object_data1_format":{"offset":	 0,"resolution" : 1		  , "start_byte": 3, "start_bit": 4, "end_byte": 3, "end_bit": 7 },
+		"Cycle_Count"		 :{"offset":	 0,"resolution" : 1		  , "start_byte": 4, "start_bit": 0, "end_byte": 7, "end_bit": 7 }
+	}
+},
+
+"format0" : {
+	"CanIdStart" : 1025,
+	"CanIdEnd"   : 1087,
+	"Elements" : {
+		"x_Point1" 	 : {"offset" : 4096,"resolution" : 0.128,"start_byte" : 0,"start_bit" : 1,"end_byte" : 1,"end_bit" : 5},
+		"y_Point1" 	 : {"offset" : 4096,"resolution" : 0.128,"start_byte" : 1,"start_bit" : 6,"end_byte" : 3,"end_bit" : 2},
+		"Speed_x" 	 : {"offset" : 1024,"resolution" : 0.1,"start_byte" : 3,"start_bit" : 3,"end_byte" : 4,"end_bit" : 5},
+		"Speed_y"    : {"offset" : 1024,"resolution" : 0.1,"start_byte" : 4, "start_bit" : 6, "end_byte" : 6, "end_bit" : 0},
+		"Object_Length" 	 : {"offset" :  0,"resolution" : 0.2,"start_byte" : 6,"start_bit" : 1,"end_byte" : 6,"end_bit" : 7},
+		"Object_ID" 	 : {"offset" :  0,"resolution" : 1,"start_byte" : 7,"start_bit" : 0,"end_byte" : 7,"end_bit" : 6}
+	}
+},
+
+"format1" : {
+	"CanIdStart" : 1025,
+	"CanIdEnd"   : 1087,
+	"Elements" : {
+		"x_Point1" 	 : {"offset" : 4096,"resolution" : 0.128,"start_byte" : 0,"start_bit" : 1,"end_byte" : 1,"end_bit" : 5},
+		"y_Point1" 	 : {"offset" : 4096,"resolution" : 0.128,"start_byte" : 1,"start_bit" : 6,"end_byte" : 3,"end_bit" : 2},
+		"Speed_x" 	 : {"offset" : 1024,"resolution" : 0.1,"start_byte" : 3,"start_bit" : 3,"end_byte" : 4,"end_bit" : 5},
+		"Speed_y"    : {"offset" : 1024,"resolution" : 0.1,"start_byte" : 4, "start_bit" : 6, "end_byte" : 6, "end_bit" : 0},
+		"Object_Length" 	 : {"offset" :  0,"resolution" : 0.2,"start_byte" : 6,"start_bit" : 1,"end_byte" : 6,"end_bit" : 7},
+		"Object_ID" 	 : {"offset" :  0,"resolution" : 1,"start_byte" : 7,"start_bit" : 0,"end_byte" : 7,"end_bit" : 6},
+		"Updated_Flag" 	 : {"offset" :  0,"resolution" : 1,"start_byte" : 7,"start_bit" : 7,"end_byte" : 7,"end_bit" : 7}
+	}
+}
+
+}

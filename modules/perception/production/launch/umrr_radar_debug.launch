@@ -1,0 +1,14 @@
+
+<cyber>
+    <desc>cyber modules list config</desc>
+    <version>1.0.0</version>
+         
+    <module>
+        <name>umrr_radar</name>
+        <dag_conf>/apollo/modules/perception/production/dag/umrr_radar_debug.dag</dag_conf>
+        <!-- if not set, use default process -->
+        <process_name>lidar_perception_fortiss</process_name>
+        <version>1.0.0</version>
+    </module>
+
+</cyber>

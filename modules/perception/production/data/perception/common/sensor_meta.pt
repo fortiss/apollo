@@ -38,6 +38,12 @@ sensor_meta {
 }
 
 sensor_meta {
+    name: "umrr_radar"
+    type: LONG_RANGE_RADAR
+    orientation: PANORAMIC
+}
+
+sensor_meta {
     name: "front_6mm"
     type: MONOCULAR_CAMERA
     orientation: FRONT

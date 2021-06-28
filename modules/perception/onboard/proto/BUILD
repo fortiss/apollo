@@ -29,6 +29,20 @@ proto_library(
 )
 
 cc_proto_library(
+    name = "umrr_radar_component_config_proto",
+    deps = [
+        ":umrr_radar_component_config_proto_lib",
+    ],
+)
+
+proto_library(
+    name = "umrr_radar_component_config_proto_lib",
+    srcs = [
+        "umrr_radar_component_config.proto",
+    ],
+)
+
+cc_proto_library(
     name = "fusion_component_config_proto",
     deps = [
         ":fusion_component_config_proto_lib",

@@ -1,0 +1,25 @@
+{
+  "can_conf": {
+    "can_card_parameter": {
+      "brand": "SOCKET_CAN_RAW",
+      "type": "USB_CARD",
+      "channel_id": "CHANNEL_ID_ZERO"
+    },
+    "enable_debug_mode": false,
+    "enable_receiver_log": false,
+    "can_spec": "/apollo/modules/drivers/radar/umrr_radar/python/can_spec/automotive_spec_objects.json"
+  },
+  
+  "radar_conf": {
+    "frame_id": "radar_FL",
+    "can_socket": "can0",
+    "debug": 0,
+    "antenna_mode": {
+      "section": 3016,
+      "parameter": 0,
+      "value": 1
+    }
+  },
+
+  "write_channel": "/apollo/sensor/radar/fortiss/FL"
+}
