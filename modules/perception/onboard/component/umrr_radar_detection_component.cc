@@ -132,8 +132,13 @@ bool UmrrRadarDetectionComponent::InternalProc(
   // Init radar perception options
   radar::RadarPerceptionOptions options;
   options.sensor_name = radar_info_.name;
+
+  // EW we need this transformation in order to transform radar data to (I guess) ego vehicle (word) data coordinates.
+  // EW therefore we get consequitevly - radar2word transformation and radar2novatel transformation
   // Init detector_options
   Eigen::Affine3d radar_trans;
+
+  // EW TODO: understand this transformation
   if (!radar2world_trans_.GetSensor2worldTrans(timestamp, &radar_trans)) {
     out_message->error_code_ = apollo::common::ErrorCode::PERCEPTION_ERROR_TF;
     AERROR << "Failed to get pose at time: " << timestamp;
@@ -148,10 +153,15 @@ bool UmrrRadarDetectionComponent::InternalProc(
   }
   PERCEPTION_PERF_BLOCK_END_WITH_INDICATOR(radar_info_.name,
                                            "GetSensor2worldTrans");
+
+  // EW we memorize these 2 transformations in "options"
+  // EW these options are later passed to Perceive function of UmrrObstaclePerception
   Eigen::Matrix4d radar2world_pose = radar_trans.matrix();
   options.detector_options.radar2world_pose = &radar2world_pose;
   Eigen::Matrix4d radar2novatel_trans_m = radar2novatel_trans.matrix();
   options.detector_options.radar2novatel_trans = &radar2novatel_trans_m;
+
+  
   if (!GetCarLocalizationSpeed(timestamp,
                                &(options.detector_options.car_linear_speed),
                                &(options.detector_options.car_angular_speed))) {
@@ -176,6 +186,8 @@ bool UmrrRadarDetectionComponent::InternalProc(
   // Init track_options
   // Init object_builder_options
   std::vector<base::ObjectPtr> radar_objects;
+
+  // EW in this case radar_perception this is UmrrObstaclePerception
   if (!radar_perception_->Perceive(corrected_obstacles, options,
                                    &radar_objects)) {
     out_message->error_code_ =
@@ -202,6 +214,7 @@ bool UmrrRadarDetectionComponent::InternalProc(
   return true;
 }
 
+// EW TODO: undestand how information about velocity is obtained
 bool UmrrRadarDetectionComponent::GetCarLocalizationSpeed(
     double timestamp, Eigen::Vector3f* car_linear_speed,
     Eigen::Vector3f* car_angular_speed) {

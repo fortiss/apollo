@@ -28,8 +28,8 @@ extrinsic_file {
 
 extrinsic_file {
     frame_id: "novatel"
-    child_frame_id: "umrr_radar"
-    file_path: "/apollo/modules/transform/conf/novatel_to_umrr_radar.yaml"
+    child_frame_id: "umrr_radar_FL"
+    file_path: "/apollo/modules/transform/conf/novatel_to_umrr_radar_FL.yaml"
     enable: true
 }
 

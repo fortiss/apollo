@@ -1,6 +1,6 @@
-radar_name: "umrr_radar"
+radar_name: "umrr_radar_FL"
 tf_child_frame_id: "umrr_radar_FL"
-radar_forward_distance: 200.0
+radar_forward_distance: 64.0
 radar_preprocessor_method: "UmrrArsPreprocessor"
 radar_perception_method: "UmrrObstaclePerception"
 radar_pipeline_name: "FLUmrrRadarPipeline"

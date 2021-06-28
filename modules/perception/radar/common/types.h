@@ -57,6 +57,21 @@ enum ContiDynProp {
   CONTI_STOPPED = 7
 };
 
+enum UmrrObjectType {
+  UMRR_PRE_TRACK = 0,
+  UMRR_PEDESTRIAN = 1,
+  UMRR_BICYCLE_MOTORCYLE = 2,
+  UMRR_UNDEFINED = 3,
+  UMRR_PASSENGER_CAR = 4,
+  UMRR_TRUCK = 5
+};
+
+enum UmrrDynProp {  
+  UMRR_UNKNOWN = 0,
+  UMRR_MOVING = 1,
+  UMRR_STATIONARY = 2
+};
+
 }  // namespace radar
 }  // namespace perception
 }  // namespace apollo

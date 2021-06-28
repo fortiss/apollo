@@ -73,12 +73,15 @@ bool UmrrObstaclePerception::Perceive(
   const std::string& sensor_name = options.sensor_name;
   PERCEPTION_PERF_BLOCK_START();
   base::FramePtr detect_frame_ptr(new base::Frame());
+  // EW in this case the detetor this is UmrrArsDetector
   CHECK(detector_->Detect(corrected_obstacles, options.detector_options,
                           detect_frame_ptr))
       << "radar detect error";
   ADEBUG << "Detected frame objects number: "
          << detect_frame_ptr->objects.size();
   PERCEPTION_PERF_BLOCK_END_WITH_INDICATOR(sensor_name, "detector");
+
+  // EW I am not changing the RoiFilter - I assume that it shall operate in a similar manner as for conti radar
   if (!roi_filter_->RoiFilter(options.roi_filter_options, detect_frame_ptr)) {
     ADEBUG << "All radar objects were filtered out";
   }

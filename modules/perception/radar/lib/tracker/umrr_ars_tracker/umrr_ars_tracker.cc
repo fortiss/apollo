@@ -38,11 +38,15 @@ bool UmrrArsTracker::Init() {
   std::string model_name = name_;
   const lib::ModelConfig *model_config = nullptr;
   bool state = true;
+
+  //EW in the case of umrr, the config this is umrr_ars_tracker.config
   if (!lib::ConfigManager::Instance()->GetModelConfig(model_name,
                                                       &model_config)) {
     AERROR << "not found model: " << model_name;
     state = false;
   }
+
+  // EW it has to be found out what shall be the value of tracking_time_window; currently it is set to 0.06
   if (!model_config->get_value("tracking_time_window", &s_tracking_time_win_)) {
     AERROR << "track_time_window is not found.";
     state = false;

@@ -80,7 +80,7 @@ void UmrrArsDetector::RawObs2Frame(
     dist_rms.setZero();
     Eigen::Matrix3d vel_rms;
     vel_rms.setZero();
-    // EW
+    // EW smartmicro radar does not provide rms (I guess root mean square) values
     // dist_rms(0, 0) = radar_obs.longitude_dist_rms();
     // dist_rms(1, 1) = radar_obs.lateral_dist_rms();
     // vel_rms(0, 0) = radar_obs.longitude_vel_rms();
@@ -103,38 +103,35 @@ void UmrrArsDetector::RawObs2Frame(
     radar_object->theta_variance = 0.0; //EW static_cast<float>(radar_obs.oritation_angle_rms() / 180.0 * PI);
     radar_object->confidence = 0.0; //EW static_cast<float>(radar_obs.probexist());
 
-    int motion_state = 0; // EW radar_obs.dynprop();
-    if (motion_state == CONTI_MOVING || motion_state == CONTI_ONCOMING ||
-        motion_state == CONTI_CROSSING_MOVING) {
+    // EW smartmicro radar does not provide information about the motion.
+    // This implementation assumes that objects are moving
+    int motion_state = UMRR_MOVING; // EW radar_obs.dynprop();
+    if (motion_state == UMRR_MOVING) {
       radar_object->motion_state = base::MotionState::MOVING;
-    } else if (motion_state == CONTI_DYNAMIC_UNKNOWN) {
+    } else if (motion_state == UMRR_UNKNOWN) {
       radar_object->motion_state = base::MotionState::UNKNOWN;
     } else {
       radar_object->motion_state = base::MotionState::STATIONARY;
       radar_object->velocity.setZero();
     }
 
-    int cls = 0; // EW define this class based on the length of an object - see specification radar_obs.obstacle_class();
-    if (cls == CONTI_CAR || cls == CONTI_TRUCK) {
+    
+    // EW defined kind of object based on the smartmicro specification which makes it dependent upon object length
+    if(radar_obs.length() >= 1.0 && radar_obs.length() <= 1.2 || radar_obs.length() >= 4.4) {
       radar_object->type = base::ObjectType::VEHICLE;
-    } else if (cls == CONTI_PEDESTRIAN) {
-      radar_object->type = base::ObjectType::PEDESTRIAN;
-    } else if (cls == CONTI_MOTOCYCLE || cls == CONTI_BICYCLE) {
+    } else if (radar_obs.length() >= 2.0 && radar_obs.length() <= 3.2) {
       radar_object->type = base::ObjectType::BICYCLE;
     } else {
       radar_object->type = base::ObjectType::UNKNOWN;
     }
-
+    
     radar_object->size(0) = static_cast<float>(radar_obs.length());
-    radar_object->size(1) = 0.0; // EW static_cast<float>(radar_obs.width());
+    radar_object->size(1) = 1.0f; // EW smarmicro does not provide information about width; I provide a static value of 1; from conti static_cast<float>(radar_obs.width());
     radar_object->size(2) = 2.0f;  // vehicle template (pnc required)
-    if (cls == CONTI_POINT) {
-      radar_object->size(0) = 1.0f;
-      radar_object->size(1) = 1.0f;
-    }
+    
     // extreme case protection
     if (radar_object->size(0) * radar_object->size(1) < 1.0e-4) {
-      if (cls == CONTI_CAR || cls == CONTI_TRUCK) {
+      if (radar_object->type == base::ObjectType::VEHICLE) {
         radar_object->size(0) = 4.0f;
         radar_object->size(1) = 1.6f;  // vehicle template
       } else {

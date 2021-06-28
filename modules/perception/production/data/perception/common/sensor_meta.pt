@@ -38,7 +38,7 @@ sensor_meta {
 }
 
 sensor_meta {
-    name: "umrr_radar"
+    name: "umrr_radar_FL"
     type: LONG_RANGE_RADAR
     orientation: PANORAMIC
 }

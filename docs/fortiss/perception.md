@@ -11,7 +11,7 @@ Could also be in one launch file, order is not relevant
 
 after entering the docker container:
 
-1. ```$ cyber_launch start modules/transform/launch/static_transform_fortiss.launch```
+1. ```$ cyber_launch start modules/transform/launch/static_transform_fortiss_with_umrr.launch```
 2. ```$ cyber_launch start modules/drivers/velodyne/launch/velodyne32_fortuna.launch```
 3. ```$ cyber_launch start modules/perception/production/launch/perception_fortiss.launch```
 

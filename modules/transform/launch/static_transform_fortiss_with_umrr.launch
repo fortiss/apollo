@@ -1,0 +1,7 @@
+<cyber>
+    <module>
+        <name>static_transform</name>
+        <dag_conf>/apollo/modules/transform/dag/static_transform_fortiss_with_umrr.dag</dag_conf>
+        <process_name></process_name>
+    </module>
+</cyber>
